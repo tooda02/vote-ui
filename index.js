@@ -9,18 +9,28 @@ var counter = 0
 var UI_PORT = 3000
 //Getting data from env HOST_VOTE_API
 var API_SERVICE_NAME = process.env.HOST_VOTE_API;
+var DEPLOY_TARGET = process.env.DEPLOY_TARGET;
 //trim https:// or http:// 
-API_SERVICE_NAME = API_SERVICE_NAME.substring(API_SERVICE_NAME.indexOf("//")+2);
-console.log(API_SERVICE_NAME);
+if(API_SERVICE_NAME != undefined)
+{
+	API_SERVICE_NAME = API_SERVICE_NAME.substring(API_SERVICE_NAME.indexOf("//")+2);
+	console.log("Service "+API_SERVICE_NAME);
+}
+
 var app = express()
 app.use(serveStatic(__dirname + "/."))
+var apiport=80
+if (DEPLOY_TARGET != undefined && DEPLOY_TARGET == "LOCAL_SANDBOX")
+{
+		apiport=8888
+		API_SERVICE_NAME = "vote_api";
+}
 
 // Endpoint 'count' - retrieve current count and store locally
 app.get('/count', function (req, res) {
-	
 	var options = {
 	  host: API_SERVICE_NAME,
-	  port: 80,
+	  port: apiport,
 	  path: '/data'
 	};
 	http.get(options, function(getres) {	
@@ -56,9 +66,10 @@ function updateCount(count) {
 	var countObj = JSON.stringify({
 	  Count: counter
 	})
+	
 	var request = new http.ClientRequest({
 		hostname: API_SERVICE_NAME,
-		port: 80,
+		port: apiport,
 		path: "/data",
 		method: "POST",
 		headers: {
